@@ -1,5 +1,6 @@
 package com.opengltest.main;
 
+import com.opengltest.main.model.RawModel;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -20,7 +21,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 public class DisplayManager {
     private static final int SCREEN_WIDTH = 1280;
     private static final int SCREEN_HEIGHT = 720;
-
+    private Loader loader;
     private long window;
 
     public void run() {
@@ -60,6 +61,7 @@ public class DisplayManager {
         // Setup a key callback. It will be called every time a key is pressed, repeated or released.
         glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
             if ( key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE )
+                loader.cleanUp();
                 glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
         });
 
@@ -99,13 +101,29 @@ public class DisplayManager {
         // bindings available for use.
         GL.createCapabilities();
 
+        loader = new Loader();
+        Renderer renderer = new Renderer();
+        float[] vertices = { -0.5f, 0.5f, 0f,
+                -0.5f, -0.5f, 0f,
+                0.5f, -0.5f, 0f,
+                0.5f, 0.5f, 0f
+        };
+        int[] indicies = {0, 1, 3,
+                          3, 1, 2 };
+
+
+        RawModel model = loader.loadToVao(vertices, indicies);
+
         // Set the clear color
-        glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+        glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
         while ( !glfwWindowShouldClose(window) ) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+
+            renderer.prepare();
+            renderer.render(model);
 
             glfwSwapBuffers(window); // swap the color buffers
             // Poll for window events. The key callback above will only be
