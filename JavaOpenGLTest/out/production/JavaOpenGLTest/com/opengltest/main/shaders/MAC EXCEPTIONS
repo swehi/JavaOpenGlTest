@@ -1,0 +1,4 @@
+Mac legacy gl-el dolgozik, ezért 120as shader verziot tudok csak használni
+Emiatt az 'in' és 'out' helyett mást kell használni, Vertexnél attribute az in, és varying az out, Fragmentnél
+varying az in és nincs out, helyette gl_FragColor-ba tesszük az értéket
+texture() helyett texture2D macen a fragment shaderben;
