@@ -2,7 +2,7 @@ package com.opengltest.main.renderEngine;
 
 import com.opengltest.main.math.Vector2f;
 import com.opengltest.main.math.Vector3f;
-import com.opengltest.main.models.model.RawModel;
+import com.opengltest.main.models.RawModel;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -92,7 +92,7 @@ public class OBJLoader {
         for(int i=0;i<indices.size();i++){
             indicesArray[i] = indices.get(i);
         }
-        return loader.loadToVao(verticesArray, indicesArray, textureArray);
+        return loader.loadToVao(verticesArray, indicesArray, textureArray, normalsArray);
 
     }
 

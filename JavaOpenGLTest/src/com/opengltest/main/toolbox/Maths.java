@@ -8,7 +8,6 @@ import com.opengltest.main.math.Vector3f;
  * Created by Alexander on 2017. 03. 25..
  */
 public class Maths {
-
     public static Matrix4f createTransformationMatrix(Vector3f translation, float rx, float ry,
                                                       float rz, float scale) {
         Matrix4f matrix = new Matrix4f();

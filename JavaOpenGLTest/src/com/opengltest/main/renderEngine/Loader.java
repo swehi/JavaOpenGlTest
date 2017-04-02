@@ -1,6 +1,6 @@
 package com.opengltest.main.renderEngine;
 
-import com.opengltest.main.models.model.RawModel;
+import com.opengltest.main.models.RawModel;
 import com.opengltest.main.textures.Texture;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -23,11 +23,13 @@ public class Loader {
     private List<Integer> textures = new ArrayList<>();
 
 
-    public RawModel loadToVao(float[] position, int[] indecies, float[] textCoords){
+    public RawModel loadToVao(float[] position, int[] indecies, float[] textCoords, float[] normals){
         int vaoID = createVao();
         bindIndiciesBuffer(indecies);
-        storeDataInAttributeList(0, position, 3);
-        storeDataInAttributeList(1, textCoords, 2);
+        storeDataInAttributeList(0, 3, position);
+        storeDataInAttributeList(1, 2, textCoords);
+        storeDataInAttributeList(2, 3, normals);
+
         unbindVAO();
         return new RawModel(vaoID, indecies.length);
     }
@@ -61,13 +63,13 @@ public class Loader {
         return vaoID;
     }
 
-    private void storeDataInAttributeList(int attributeNumber, float[] data, int dimension){
+    private void storeDataInAttributeList(int attributeNumber, int coordinateSize,float[] data){
         int vboID = GL15.glGenBuffers();
         vbos.add(vboID);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
         FloatBuffer buffer = storeDataInFloatBuffer(data);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
-        GL20.glVertexAttribPointer(attributeNumber, dimension , GL11.GL_FLOAT, false, 0,0);
+        GL20.glVertexAttribPointer(attributeNumber,coordinateSize,GL11.GL_FLOAT,false,0,0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
     }
 
@@ -80,10 +82,10 @@ public class Loader {
     }
 
     private IntBuffer storeDataInIntBuffer(int[] data){
-        IntBuffer intBuffer = BufferUtils.createIntBuffer(data.length);
-        intBuffer.put(data);
-        intBuffer.flip();
-        return intBuffer;
+        IntBuffer buffer = BufferUtils.createIntBuffer(data.length);
+        buffer.put(data);
+        buffer.flip();
+        return buffer;
     }
 
     private FloatBuffer storeDataInFloatBuffer(float[] data){

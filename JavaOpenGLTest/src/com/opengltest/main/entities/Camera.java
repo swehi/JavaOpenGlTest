@@ -1,51 +1,56 @@
 package com.opengltest.main.entities;
 
-import com.opengltest.main.Keyboard;
 import com.opengltest.main.math.Vector3f;
+import com.opengltest.main.toolbox.Keyboard;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-/**
- * Created by Alexander on 2017. 03. 26..
- */
 public class Camera {
-    private Vector3f position = new Vector3f(0,0,0);
-    private float pitch;
-    private float yaw;
-    private float roll;
+	
+	private Vector3f position = new Vector3f(0,5,0);
+	private float pitch = 10;
+	private float yaw ;
+	private float roll;
+	
+	public Camera(){}
+	
+	public void move(){
+		if(Keyboard.isKeyDown(GLFW_KEY_W)){
+			position.z-=0.2f;
+		}
+		if(Keyboard.isKeyDown(GLFW_KEY_S)){
+			position.z-=-0.2f;
+		}
+		if(Keyboard.isKeyDown(GLFW_KEY_D)){
+			position.x+=0.2f;
+		}
+		if(Keyboard.isKeyDown(GLFW_KEY_A)){
+			position.x-=0.2f;
+		}
+		if(Keyboard.isKeyDown(GLFW_KEY_SPACE)){
+			position.y+=0.2f;
+		}
+		if(Keyboard.isKeyDown(GLFW_KEY_LEFT_SHIFT)){
+			position.y-=0.2f;
+		}
+	}
 
-    public Camera(){}
+	public Vector3f getPosition() {
+		return position;
+	}
 
-    public void move(){
+	public float getPitch() {
+		return pitch;
+	}
 
-        if(Keyboard.isKeyDown(GLFW_KEY_W)){
-            position.y+=0.02f;
-        }
-        if(Keyboard.isKeyDown(GLFW_KEY_S)){
-            position.y-=0.02f;
-        }
-        if(Keyboard.isKeyDown(GLFW_KEY_D)){
-            position.x-=0.02f;
-        }
-        if(Keyboard.isKeyDown(GLFW_KEY_A)){
-            position.x+=0.02f;
-        }
-    }
+	public float getYaw() {
+		return yaw;
+	}
 
-    public Vector3f getPosition() {
-        return position;
-    }
-
-    public float getPitch() {
-        return pitch;
-    }
-
-    public float getYaw() {
-        return yaw;
-    }
-
-    public float getRoll() {
-        return roll;
-    }
+	public float getRoll() {
+		return roll;
+	}
+	
+	
 
 }
