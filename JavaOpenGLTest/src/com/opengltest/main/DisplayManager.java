@@ -3,19 +3,23 @@ package com.opengltest.main;
 import com.opengltest.main.entities.Camera;
 import com.opengltest.main.entities.Entity;
 import com.opengltest.main.entities.Light;
+import com.opengltest.main.entities.Player;
 import com.opengltest.main.math.Vector3f;
 import com.opengltest.main.models.TexturedModel;
 import com.opengltest.main.models.RawModel;
 import com.opengltest.main.renderEngine.Loader;
 import com.opengltest.main.renderEngine.MasterRenderer;
 import com.opengltest.main.renderEngine.OBJLoader;
+import com.opengltest.main.renderEngine.newloader.ModelData;
+import com.opengltest.main.renderEngine.newloader.OBJFileLoader;
 import com.opengltest.main.terrains.Terrain;
 import com.opengltest.main.textures.ModelTexture;
+import com.opengltest.main.textures.TerrainTexture;
+import com.opengltest.main.textures.TerrainTexturePack;
 import com.opengltest.main.toolbox.Keyboard;
+import com.opengltest.main.toolbox.MouseCursorPos;
 import org.lwjgl.Version;
-import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWKeyCallback;
-import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
 
@@ -39,6 +43,9 @@ public class DisplayManager {
     private long window;
     private static final String TEXTURE_FILE = "res/tree.png";
     private GLFWKeyCallback keyCallback;
+    private GLFWCursorPosCallback cursorPosCallback;
+    private static long lastFrameTime;
+    private static float delta;
 
 
     public void run() {
@@ -51,6 +58,7 @@ public class DisplayManager {
         glfwFreeCallbacks(window);
         glfwDestroyWindow(window);
         keyCallback.free();
+        cursorPosCallback.free();
 
         // Terminate GLFW and free the error callback
         glfwTerminate();
@@ -72,10 +80,11 @@ public class DisplayManager {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
 
         // Create the window
-        window = glfwCreateWindow(600, 600, "Hello World!", NULL, NULL);
+        window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello World!", NULL, NULL);
         if ( window == NULL )
             throw new RuntimeException("Failed to create the GLFW window");
 
+        lastFrameTime = getCurrentTime();
         // Setup a key callback. It will be called every time a key is pressed, repeated or released.
         glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
             if ( key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE )
@@ -83,7 +92,7 @@ public class DisplayManager {
         });
 
         glfwSetKeyCallback(window, keyCallback = new Keyboard());
-
+        glfwSetCursorPosCallback(window, cursorPosCallback = new MouseCursorPos());
 
         // Get the thread stack and push a new frame
         try ( MemoryStack stack = stackPush() ) {
@@ -122,30 +131,70 @@ public class DisplayManager {
         GL.createCapabilities();
         Loader loader = new Loader();
 
+        /*
+        ***************TEXTURE PACK************
+         */
+        TerrainTexture bacTerrainTexture = new TerrainTexture(loader.loadTexture("res/grassy.png"));
+        TerrainTexture rTerrainTexture = new TerrainTexture(loader.loadTexture("res/dirt.png"));
+        TerrainTexture gTerrainTexture = new TerrainTexture(loader.loadTexture("res/pinkFlowers.png"));
+        TerrainTexture bTerrainTexture = new TerrainTexture(loader.loadTexture("res/path.png"));
+        TerrainTexture blendMap = new TerrainTexture(loader.loadTexture("res/blendMap.png"));
 
-        RawModel model = OBJLoader.loadObjModel("tree", loader);
+        TerrainTexturePack terrainTexturePack = new TerrainTexturePack(bacTerrainTexture, rTerrainTexture,gTerrainTexture,bTerrainTexture);
 
-        TexturedModel staticModel = new TexturedModel(model,new ModelTexture(loader.loadTexture("res/tree.png")));
+//        ModelData modelData = OBJFileLoader.loadOBJ("tree");
+//        loader.loadToVao(modelData.getVertices(), modelData.getIndices(), modelData.getTextureCoords(), modelData.getNormals());
+
+        RawModel tree = OBJFileLoader.loadToModel("tree", loader);
+        RawModel tree2 = OBJFileLoader.loadToModel("lowPolyTree", loader);
+
+        TexturedModel staticModel = new TexturedModel(tree,new ModelTexture(loader.loadTexture("res/tree.png")));
+        TexturedModel staticModel2 = new TexturedModel(tree,new ModelTexture(loader.loadTexture("res/lowPolyTree.png")));
+
+        RawModel grassModel = OBJFileLoader.loadToModel("grassModel", loader);
+        TexturedModel grassTextModel = new TexturedModel(grassModel,new ModelTexture(loader.loadTexture("res/grassTexture.png")));
+        grassTextModel.getTexture().setHasTransparency(true);
+        grassTextModel.getTexture().setUseFakeLighting(true);
+
+
+        RawModel fernModel = OBJFileLoader.loadToModel("fern", loader);
+        TexturedModel fernTextModel = new TexturedModel(fernModel,new ModelTexture(loader.loadTexture("res/fern.png")));
+        fernTextModel.getTexture().setHasTransparency(true);
+        fernTextModel.getTexture().setNumberOfRows(2);
+
+        Terrain terrain2 = new Terrain(0,-1,loader, terrainTexturePack, blendMap, "heightmap");
 
         List<Entity> entities = new ArrayList<Entity>();
         Random random = new Random();
         for(int i=0;i<500;i++){
-            entities.add(new Entity(staticModel, new Vector3f(random.nextFloat()*800 - 400,0,random.nextFloat() * -600),0,0,0,3));
+            float x = random.nextFloat()*800 - 400;
+            float z = random.nextFloat() * -600;
+            float y = terrain2.getHeightOfTerrain(x,z);
+            if (i % 5 == 0){
+                entities.add(new Entity(grassTextModel, new Vector3f(x,y,z),0,0,0,0.6f));
+            }else if(i % 10 == 0){
+                entities.add(new Entity(staticModel2, new Vector3f(x,y,z),0,0,0,2.6f));
+            }else if(i%2 ==0){
+                entities.add(new Entity(staticModel, new Vector3f(x,y,z),0,0,0,3));
+            }else{
+                entities.add(new Entity(fernTextModel, new Vector3f(x,y,z),0,0,0,1, random.nextInt(4)));
+            }
         }
 
         Light light = new Light(new Vector3f(20000,20000,2000),new Vector3f(1,1,1));
 
-        Terrain terrain = new Terrain(-1,-1,loader,new ModelTexture(loader.loadTexture("res/grass.png")));
-        Terrain terrain2 = new Terrain(0,-1,loader,new ModelTexture(loader.loadTexture("res/grass.png")));
+//        Terrain terrain = new Terrain(-1,-1,loader, terrainTexturePack, blendMap, "heightmap");
 
-        Camera camera = new Camera();
         MasterRenderer renderer = new MasterRenderer(window);
-//        ModelTexture texture = new ModelTexture(loader.loadTexture(TEXTURE_FILE));
-//        texture.setReflectivity(11.2f);
-//        texture.setShineDamper(111f);
-//        RawModel model = OBJLoader.loadObjModel("tree", loader);
-//        TexturedModel texturedModel = new TexturedModel(model, texture);
-//
+        ModelTexture texture = new ModelTexture(loader.loadTexture("res/image.png"));
+        texture.setReflectivity(11.2f);
+        texture.setShineDamper(111f);
+        RawModel model = OBJLoader.loadObjModel("bunny", loader);
+        TexturedModel texturedModel = new TexturedModel(model, texture);
+
+        Player player = new Player(texturedModel, new Vector3f(110, 0, -50),0,0,0,1);
+        Camera camera = new Camera(player, window);
+
 //        Entity entity = new Entity(texturedModel, new Vector3f(0, 0,-15f), 0, 0, 0, 1.5f);
 //        Light light = new Light(new Vector3f(0,14,-10), new Vector3f(1,1,1));
 //
@@ -161,18 +210,20 @@ public class DisplayManager {
         while ( !glfwWindowShouldClose(window) ) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
-//            entity.increaseRotation(0, 0.5f, 0);
-//            masterRenderer.processEntity(entity);
-//            masterRenderer.render(light, camera);
+            camera.move((MouseCursorPos) cursorPosCallback);
+            player.move(terrain2);
 
-            camera.move();
-
-            renderer.processTerrain(terrain);
+            renderer.processEntity(player);
+//            renderer.processTerrain(terrain);
             renderer.processTerrain(terrain2);
             for(Entity entity:entities){
                 renderer.processEntity(entity);
             }
             renderer.render(light, camera);
+
+            long currentFrameTime = getCurrentTime();
+            delta = currentFrameTime - lastFrameTime;
+            lastFrameTime = currentFrameTime;
 
             glfwSwapBuffers(window); // swap the color buffers
             // Poll for window events. The key callback above will only be
@@ -183,6 +234,14 @@ public class DisplayManager {
         loader.cleanUp();
     }
 
+    public static float getFrameTimeSeconds(){
+        return delta/100000000;
+    }
+
+    private static long getCurrentTime(){
+//        return (long)org.lwjgl.glfw.GLFW.glfwGetTime();
+        return System.nanoTime();
+    }
 
     public static void main(String[] args) {
         new DisplayManager().run();

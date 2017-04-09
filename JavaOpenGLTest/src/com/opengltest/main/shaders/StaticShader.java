@@ -3,6 +3,8 @@ package com.opengltest.main.shaders;
 import com.opengltest.main.entities.Camera;
 import com.opengltest.main.entities.Light;
 import com.opengltest.main.math.Matrix4f;
+import com.opengltest.main.math.Vector2f;
+import com.opengltest.main.math.Vector3f;
 import com.opengltest.main.toolbox.Maths;
 
 /**
@@ -20,6 +22,10 @@ public class StaticShader extends ShaderProgram{
     private int location_lightColour;
     private int location_shineDamper;
     private int location_reflectivity;
+    private int location_useFakeLighting;
+    private int location_skyColour;
+    private int location_offset;
+    private int location_numberOfRows;
 
     public StaticShader() {
         super(VERTEX_FILE, FRAGMENT_FILE);
@@ -41,7 +47,23 @@ public class StaticShader extends ShaderProgram{
         location_lightColour = super.getUniformLocation("lightColour");
         location_shineDamper = super.getUniformLocation("shineDamper");
         location_reflectivity = super.getUniformLocation("reflectivity");
+        location_useFakeLighting = super.getUniformLocation("useFakeLighting");
+        location_skyColour = super.getUniformLocation("skyColour");
+        location_offset = super.getUniformLocation("offset");
+        location_numberOfRows = super.getUniformLocation("numberOfRows");
 
+    }
+
+    public void loadNumberOfRows(int numberOfRows){
+        super.loadFloat(location_numberOfRows, numberOfRows);
+    }
+
+    public void loadOffset(float x, float y){
+        super.loadVector(location_offset, new Vector2f(x,y));
+    }
+
+    public void loadSkyColour(float r, float g, float b){
+        super.loadVector(location_skyColour, new Vector3f(r,g,b));
     }
 
     public void loadShineVariables(float damper,float reflectivity){
@@ -56,6 +78,10 @@ public class StaticShader extends ShaderProgram{
     public void loadLight(Light light){
         super.loadVector(location_lightPosition, light.getPosition());
         super.loadVector(location_lightColour, light.getColour());
+    }
+
+    public void loadFakeLight(boolean useFakeLight){
+        super.loadBoolean(location_useFakeLighting, useFakeLight);
     }
 
     public void loadViewMatrix(Camera camera){

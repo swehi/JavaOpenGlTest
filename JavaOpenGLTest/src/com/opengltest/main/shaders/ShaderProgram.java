@@ -1,6 +1,7 @@
 package com.opengltest.main.shaders;
 
 import com.opengltest.main.math.Matrix4f;
+import com.opengltest.main.math.Vector2f;
 import com.opengltest.main.math.Vector3f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -66,9 +67,18 @@ public abstract class ShaderProgram {
         GL20.glUniform1f(location, value);
     }
 
+    protected void loadInt(int location, int value){
+        GL20.glUniform1i(location, value);
+    }
+
     protected void loadVector(int location, Vector3f vector){
         GL20.glUniform3f(location,vector.x,vector.y,vector.z);
     }
+
+    protected void loadVector(int location, Vector2f vector){
+        GL20.glUniform2f(location,vector.x,vector.y);
+    }
+
 
     protected void loadBoolean(int location, boolean value){
         float toLoad = 0;

@@ -32,6 +32,10 @@ public class MasterRenderer {
     private StaticShader shader = new StaticShader();
     private EntityRenderer renderer;
 
+    private static final float RED = 0.5f;
+    private static final float GREEN = 0.5f;
+    private static final float BLUE = 0.5f;
+
     private TerrainRenderer terrainRenderer;
     private TerrainShader terrainShader = new TerrainShader();
 
@@ -41,8 +45,7 @@ public class MasterRenderer {
 
     public MasterRenderer(long window) {
         this.window = window;
-        GL11.glEnable(GL11.GL_CULL_FACE);
-        GL11.glCullFace(GL11.GL_BACK);
+        enableCulling();
         createProjectionMatrix();
         renderer = new EntityRenderer(shader,projectionMatrix);
         terrainRenderer = new TerrainRenderer(terrainShader,projectionMatrix);
@@ -51,11 +54,13 @@ public class MasterRenderer {
     public void render(Light sun,Camera camera){
         prepare();
         shader.start();
+        shader.loadSkyColour(RED, GREEN, BLUE);
         shader.loadLight(sun);
         shader.loadViewMatrix(camera);
         renderer.render(entities);
         shader.stop();
         terrainShader.start();
+        terrainShader.loadSkyColour(RED, GREEN, BLUE);
         terrainShader.loadLight(sun);
         terrainShader.loadViewMatrix(camera);
         terrainRenderer.render(terrains);
@@ -80,6 +85,15 @@ public class MasterRenderer {
         }
     }
 
+    public static void enableCulling(){
+        GL11.glEnable(GL11.GL_CULL_FACE);
+        GL11.glCullFace(GL11.GL_BACK);
+    }
+
+    public static void disableCulling(){
+        GL11.glDisable(GL11.GL_CULL_FACE);
+    }
+
     public void cleanUp(){
         shader.cleanUp();
         terrainShader.cleanUp();
@@ -88,7 +102,7 @@ public class MasterRenderer {
     public void prepare() {
         GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-        GL11.glClearColor(0.49f, 89f, 0.98f, 1);
+        GL11.glClearColor(RED, GREEN, BLUE, 1);
     }
 
     private void createProjectionMatrix(){
